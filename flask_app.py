@@ -3,6 +3,7 @@ from monitoring.prometheus import start_http_server,REQUEST_TIME,COUNT_p
 import os
 from prediction_validation_insertion import pred_validation
 from predictFromModel import prediction
+import time
 
 app = Flask(__name__)
 
@@ -30,20 +31,24 @@ def predict():
         COUNT_p.inc()
         return jsonify({'prediction': result.tolist()})
     
-@REQUEST_TIME.time()
+#@REQUEST_TIME.time()
 @app.route('/get_prediction', methods=['GET'])
 def get_prediction():
   
-    
+    start_time = time.time()
     file_path = "default_file"
     if file_path is not None:
         pred_valid = pred_validation(file_path)
         pred_valid.prediction_validation()
         
         pred = prediction()
+        
         result = pred.predictionfrommodel()
-  
         COUNT_p.inc()
+        end_time= time.time()
+        total_duration = end_time - start_time
+        REQUEST_TIME.observe(total_duration)
+        
         return jsonify({'prediction': result})
 
 if __name__ == "__main__":
